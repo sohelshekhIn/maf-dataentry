@@ -1,0 +1,12 @@
+# generate gitignore content
+
+venv/
+*.pyc
+*.pyo
+*.log
+*.swp
+*.out
+*.pid
+*.db
+*.sqlite3
+.env

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Upload Product</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="bg-gray-100 min-h-screen flex items-center justify-center px-2">
+      <div
+        class="bg-white p-4 sm:p-6 md:p-8 lg:p-10 rounded shadow-md w-full sm:w-96 md:w-96 lg:w-96"
+      >
+        <h1 class="text-2xl font-bold mb-4">Upload Product</h1>
+        <!-- <a href="/camera"
+          ><button
+            class="bg-blue-500 text-white py-2 mb-5 px-4 rounded cursor-pointer"
+          >
+            Open Camera
+          </button></a
+        > -->
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <div class="mb-4">
+            <label for="name" class="block font-medium">Product Name:</label>
+            <input
+              type="text"
+              name="name"
+              class="w-full border rounded py-2 px-3"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label for="price" class="block font-medium">Price:</label>
+            <input
+              id="price"
+              type="number"
+              name="price"
+              class="w-full border rounded py-2 px-3"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label for="discounted_price" class="block font-medium"
+              >Discounted Price:</label
+            >
+            <input
+              id="discounted_price"
+              type="number"
+              name="discounted_price"
+              class="w-full border rounded py-2 px-3"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label for="image" class="block font-medium">Upload Image:</label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*;capture=camera"
+              class="w-full py-2 px-3"
+              required
+              id="imageInput"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="image" class="block font-medium">Image Preview:</label>
+            <img
+              id="imagePreview"
+              class="max-w-xs mx-auto"
+              style="display: none"
+            />
+          </div>
+          <div class="mt-4">
+            <input
+              accesskey="s"
+              type="submit"
+              value="Upload"
+              class="bg-blue-500 text-white py-2 px-4 rounded cursor-pointer w-full"
+            />
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // JavaScript for image preview
+      const imageInput = document.getElementById("imageInput");
+      const imagePreview = document.getElementById("imagePreview");
+
+      imageInput.addEventListener("change", function () {
+        if (imageInput.files && imageInput.files[0]) {
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = "block";
+          };
+
+          reader.readAsDataURL(imageInput.files[0]);
+        }
+      });
+    </script>
+  </body>
+</html>

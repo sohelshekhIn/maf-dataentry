@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Take Photo and Upload</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="bg-gray-100 min-h-screen flex items-center justify-center">
+      <div
+        class="bg-white p-4 sm:p-6 md:p-8 lg:p-10 rounded shadow-md max-w-md"
+      >
+        <h1 class="text-2xl font-bold mb-4">Take Photo and Upload</h1>
+        <div class="mb-4">
+          <video id="video" class="w-full" autoplay playsinline></video>
+        </div>
+        <button
+          id="startButton"
+          class="bg-blue-500 text-white py-2 px-4 rounded cursor-pointer"
+        >
+          Start Camera
+        </button>
+        <input type="file" accept="image/*;capture=camera" />
+        <div class="mb-4">
+          <input
+            type="text"
+            id="name"
+            placeholder="Product Name"
+            class="w-full border rounded py-2 px-3"
+            required
+          />
+        </div>
+        <div class="mb-4">
+          <input
+            type="number"
+            id="price"
+            placeholder="Price"
+            class="w-full border rounded py-2 px-3"
+            required
+          />
+        </div>
+        <div class="mb-4">
+          <input
+            type="number"
+            id="discounted_price"
+            placeholder="Discounted Price"
+            class="w-full border rounded py-2 px-3"
+            required
+          />
+        </div>
+        <div class="mb-4">
+          <canvas id="canvas" style="display: none"></canvas>
+        </div>
+        <div class="mb-4">
+          <img id="photo" class="max-w-xs mx-auto" style="display: none" />
+        </div>
+        <div class="mt-4">
+          <button
+            id="takePhotoButton"
+            class="bg-blue-500 text-white py-2 px-4 rounded cursor-pointer"
+            disabled
+          >
+            Take Photo
+          </button>
+        </div>
+        <div class="mt-4">
+          <button
+            id="uploadButton"
+            class="bg-blue-500 text-white py-2 px-4 rounded cursor-pointer"
+            disabled
+          >
+            Upload
+          </button>
+          <div id="uploadSpinner" class="mt-2 text-blue-500 hidden">
+            Uploading...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const photo = document.getElementById("photo");
+      const startButton = document.getElementById("startButton");
+      const takePhotoButton = document.getElementById("takePhotoButton");
+      const uploadButton = document.getElementById("uploadButton");
+      const uploadSpinner = document.getElementById("uploadSpinner");
+      const nameInput = document.getElementById("name");
+      const priceInput = document.getElementById("price");
+      const discountedPriceInput = document.getElementById("discounted_price");
+
+      let streaming = false;
+      let localStream = null;
+
+      startButton.addEventListener("click", function () {
+        if (!streaming) {
+          startCamera();
+        }
+      });
+
+      takePhotoButton.addEventListener("click", function () {
+        if (localStream) {
+          takePhoto();
+        }
+      });
+
+      uploadButton.addEventListener("click", function () {
+        if (localStream) {
+          uploadPhoto();
+        }
+      });
+
+      function startCamera() {
+        navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: "environment" }, audio: false })
+          .then(function (stream) {
+            video.srcObject = stream;
+            localStream = stream;
+            streaming = true;
+            startButton.textContent = "Stop Camera";
+            takePhotoButton.removeAttribute("disabled");
+          })
+          .catch(function (error) {
+            console.error("Error accessing the camera:", error);
+          });
+      }
+
+      function takePhoto() {
+        if (!localStream) return;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas
+          .getContext("2d")
+          .drawImage(video, 0, 0, canvas.width, canvas.height);
+        photo.src = canvas.toDataURL("image/jpeg");
+        photo.style.display = "block";
+        nameInput.removeAttribute("disabled");
+        priceInput.removeAttribute("disabled");
+        discountedPriceInput.removeAttribute("disabled");
+        uploadButton.removeAttribute("disabled");
+      }
+
+      function uploadPhoto() {
+        uploadSpinner.style.display = "inline";
+        takePhotoButton.disabled = true;
+        uploadButton.disabled = true;
+
+        const formData = new FormData();
+        formData.append("name", nameInput.value);
+        formData.append("price", priceInput.value);
+        formData.append("discounted_price", discountedPriceInput.value);
+        formData.append("image", dataURItoBlob(photo.src));
+
+        fetch("/upload", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            uploadSpinner.style.display = "none";
+            alert(data.message);
+            clearPhoto();
+          })
+          .catch((error) => {
+            uploadSpinner.style.display = "none";
+            console.error("Error:", error);
+          });
+      }
+
+      function clearPhoto() {
+        photo.style.display = "none";
+        nameInput.value = "";
+        priceInput.value = "";
+        discountedPriceInput.value = "";
+        takePhotoButton.disabled = false;
+        uploadButton.disabled = false;
+      }
+
+      function dataURItoBlob(dataURI) {
+        const byteString = atob(dataURI.split(",")[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: "image/jpeg" });
+      }
+    </script>
+  </body>
+</html>
