@@ -34,7 +34,6 @@ def products():
 
 @app.route("/upload", methods=["POST"])
 def upload_image():
-    print(request.form)
     # Get the uploaded image and other data
     image = request.files["image"]
     name = request.form["name"]
@@ -45,16 +44,11 @@ def upload_image():
     result = upload(image, folder="products")
     image_url = result["secure_url"]
 
-    # Create a new CSV entry
-    # with open("products.csv", mode="a", newline="") as csv_file:
-    #     csv_writer = csv.writer(csv_file)
-    #     csv_writer.writerow([name, price, discounted_price, image_url])
-
     data, count = (
         supabase.table("products")
         .insert(
             {
-                "name": name,
+                "name": name.title(),
                 "price": price,
                 "disc_price": discounted_price,
                 "photo_url": image_url,
@@ -62,8 +56,35 @@ def upload_image():
         )
         .execute()
     )
-    print(data, count)
     return redirect(url_for("index"))
+
+
+@app.route("/wa-upload", methods=["POST"])
+def automateUpload():
+    # get data from request
+    data = request.get_json()
+    # Get the uploaded image and other data
+    image = data["image"]
+    name = data["name"]
+    price = data["price"]
+    discounted_price = data["discounted_price"]
+    # Upload the image to Cloudinary
+    result = upload(image, folder="products")
+    image_url = result["secure_url"]
+
+    data, count = (
+        supabase.table("products")
+        .insert(
+            {
+                "name": name.title(),
+                "price": price,
+                "disc_price": discounted_price,
+                "photo_url": image_url,
+            }
+        )
+        .execute()
+    )
+    return "Done"
 
 
 if __name__ == "__main__":
