@@ -1,11 +1,16 @@
 import cloudinary
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from cloudinary.uploader import upload
-import csv
 from os import getenv
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 load_dotenv()
+
+url: str = getenv("SUPABASE_URL")
+key: str = getenv("SUPABASE_KEY")
+supabase: Client = create_client(url, key)
+
 app = Flask(__name__)
 
 cloudinary.config(
@@ -21,9 +26,10 @@ def index():
     return render_template("upload.html")
 
 
-@app.route("/camera")
-def camera():
-    return render_template("camera.html")
+@app.route("/products")
+def products():
+    response = supabase.table("products").select("*").execute()
+    return render_template("products.html", response=response)
 
 
 @app.route("/upload", methods=["POST"])
@@ -40,10 +46,23 @@ def upload_image():
     image_url = result["secure_url"]
 
     # Create a new CSV entry
-    with open("products.csv", mode="a", newline="") as csv_file:
-        csv_writer = csv.writer(csv_file)
-        csv_writer.writerow([name, price, discounted_price, image_url])
+    # with open("products.csv", mode="a", newline="") as csv_file:
+    #     csv_writer = csv.writer(csv_file)
+    #     csv_writer.writerow([name, price, discounted_price, image_url])
 
+    data, count = (
+        supabase.table("products")
+        .insert(
+            {
+                "name": name,
+                "price": price,
+                "disc_price": discounted_price,
+                "photo_url": image_url,
+            }
+        )
+        .execute()
+    )
+    print(data, count)
     return redirect(url_for("index"))
 
 

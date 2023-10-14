@@ -10,3 +10,5 @@ venv/
 *.db
 *.sqlite3
 .env
+.vercel
+*.csv
